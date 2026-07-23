@@ -1,0 +1,175 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --radius: 0.65rem;
+
+  /* Ledger palette — light */
+  --background: #faf9f6;
+  --foreground: #14231f;
+  --surface: #ffffff;
+  --surface-muted: #f1efe9;
+  --border: #e4e0d6;
+  --border-strong: #d3cdbe;
+
+  --primary: #1f6f5c;
+  --primary-foreground: #f8faf7;
+  --primary-soft: #e3efe9;
+
+  --accent: #b9862e;
+  --accent-foreground: #2a2110;
+  --accent-soft: #f4ead2;
+
+  --danger: #b23a48;
+  --danger-foreground: #fdf3f3;
+  --danger-soft: #f7e3e2;
+
+  --warning: #c78a2e;
+  --warning-soft: #f7ecd6;
+
+  --muted-foreground: #6b6b60;
+
+  --chart-1: #1f6f5c;
+  --chart-2: #b9862e;
+  --chart-3: #6a8caf;
+  --chart-4: #b23a48;
+  --chart-5: #8a6bb0;
+  --chart-6: #4a4a42;
+}
+
+.dark {
+  --background: #0b1614;
+  --foreground: #eae7de;
+  --surface: #101f1c;
+  --surface-muted: #16241f;
+  --border: #22332e;
+  --border-strong: #2c4038;
+
+  --primary: #3fa588;
+  --primary-foreground: #071110;
+  --primary-soft: #16332c;
+
+  --accent: #d9ab5a;
+  --accent-foreground: #241c09;
+  --accent-soft: #2c2412;
+
+  --danger: #e07480;
+  --danger-foreground: #23090c;
+  --danger-soft: #2c1417;
+
+  --warning: #e0b464;
+  --warning-soft: #2b2412;
+
+  --muted-foreground: #9a9a8c;
+
+  --chart-1: #3fa588;
+  --chart-2: #d9ab5a;
+  --chart-3: #8fb2d6;
+  --chart-4: #e07480;
+  --chart-5: #b39bdb;
+  --chart-6: #c9c6ba;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-soft: var(--danger-soft);
+
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", ui-serif, Georgia, serif;
+  --font-sans: ui-sans-serif, "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, Consolas, monospace;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+
+@media print {
+  aside, header, .print\:hidden {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .rounded-xl, .rounded-lg, .rounded-md {
+    border-color: #ccc !important;
+    box-shadow: none !important;
+  }
+}
