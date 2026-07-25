@@ -158,7 +158,7 @@ body {
 }
 
 @media print {
-  aside, header, .print\:hidden {
+  aside, header, .print\:hidden, button, .no-print {
     display: none !important;
   }
   main {
@@ -167,9 +167,43 @@ body {
   body {
     background: white !important;
     color: black !important;
+    font-size: 12pt;
   }
   .rounded-xl, .rounded-lg, .rounded-md {
     border-color: #ccc !important;
     box-shadow: none !important;
+    border-radius: 4px !important;
+  }
+  .card, [class*="Card"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    margin-bottom: 1rem;
+  }
+  .bg-surface, .bg-surface-muted {
+    background: white !important;
+  }
+  .text-muted-foreground {
+    color: #666 !important;
+  }
+  .text-primary {
+    color: #000 !important;
+  }
+  .text-danger {
+    color: #000 !important;
+  }
+  @page {
+    margin: 1cm;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  table {
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
   }
 }

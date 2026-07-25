@@ -209,6 +209,66 @@ export default function ReportsPage() {
           ) : <Skeleton className="h-16" />}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base font-medium text-foreground">Spending by payment method</CardTitle></CardHeader>
+        <CardContent>
+          {report && report.paymentMethodBreakdown.length > 0 ? (
+            <div className="space-y-4">
+              {report.paymentMethodBreakdown.map((method) => (
+                <div key={method.accountType} className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm font-medium">{method.label}</span>
+                      <span className="text-sm text-muted-foreground">{method.transactionCount} transactions</span>
+                    </div>
+                    <div className="h-2 bg-surface-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full"
+                        style={{ width: `${(method.spending / report.totalExpense) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-mono-num text-sm font-semibold text-danger">{formatMoney(method.spending, currency)}</p>
+                    <p className="text-xs text-muted-foreground">expenses</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-mono-num text-sm font-semibold text-primary">{formatMoney(method.income, currency)}</p>
+                    <p className="text-xs text-muted-foreground">income</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="py-8 text-center text-sm text-muted-foreground">No payment method data available</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {report?.weeklyComparison && (
+        <Card>
+          <CardHeader><CardTitle className="text-base font-medium text-foreground">Week-over-week comparison</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <p className="text-xs text-muted-foreground">This week</p>
+                <p className="font-mono-num text-lg font-semibold">{formatMoney(report.weeklyComparison.thisWeek, currency)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Last week</p>
+                <p className="font-mono-num text-lg font-semibold">{formatMoney(report.weeklyComparison.lastWeek, currency)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Change</p>
+                <p className={`font-mono-num text-lg font-semibold ${report.weeklyComparison.changePercent !== null ? (report.weeklyComparison.changePercent >= 0 ? "text-danger" : "text-primary") : ""}`}>
+                  {report.weeklyComparison.changePercent !== null ? `${report.weeklyComparison.changePercent >= 0 ? "+" : ""}${report.weeklyComparison.changePercent.toFixed(1)}%` : "N/A"}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
