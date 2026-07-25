@@ -17,6 +17,8 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { transactionSchema, type TransactionInput } from "@/lib/validation";
 import { useCategories } from "@/hooks/use-categories";
+import { useAccounts } from "@/hooks/use-accounts";
+import { ACCOUNT_TYPE_META, type AccountType } from "@/lib/account-meta";
 import { useCreateTransaction, useUpdateTransaction } from "@/hooks/use-transactions";
 import type { TransactionDTO } from "@/lib/api-client";
 
@@ -51,6 +53,7 @@ export function TransactionFormDialog({
   editing?: TransactionDTO | null;
 }) {
   const { data: categories } = useCategories();
+  const { data: accounts } = useAccounts();
   const createTxn = useCreateTransaction();
   const updateTxn = useUpdateTransaction();
   const [uploading, setUploading] = React.useState(false);
@@ -63,6 +66,7 @@ export function TransactionFormDialog({
     defaultValues: {
       title: "", amount: 0, type: "expense", categoryId: "", paymentMethod: "card",
       notes: "", date: todayStr(), receiptUrl: "", isRecurring: false, recurrenceInterval: null,
+      accountId: null,
     },
   });
 
@@ -85,14 +89,17 @@ export function TransactionFormDialog({
         receiptUrl: editing.receiptUrl ?? "",
         isRecurring: editing.isRecurring,
         recurrenceInterval: editing.recurrenceInterval,
+        accountId: editing.accountId,
       });
     } else {
+      const defaultAccount = accounts?.find((a) => a.isDefault) ?? accounts?.[0];
       reset({
         title: "", amount: 0, type: "expense", categoryId: "", paymentMethod: "card",
         notes: "", date: todayStr(), receiptUrl: "", isRecurring: false, recurrenceInterval: null,
+        accountId: defaultAccount?.id ?? null,
       });
     }
-  }, [open, editing, reset]);
+  }, [open, editing, reset, accounts]);
 
   async function onSubmit(values: TransactionInput) {
     if (editing) {
@@ -187,6 +194,29 @@ export function TransactionFormDialog({
                       {PAYMENT_METHODS.map((p) => (
                         <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <Label>Connected account (optional)</Label>
+              <Controller
+                control={control}
+                name="accountId"
+                render={({ field }) => (
+                  <Select value={field.value ?? "none"} onValueChange={(v) => field.onChange(v === "none" ? null : v)}>
+                    <SelectTrigger><SelectValue placeholder="No account" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No connected account</SelectItem>
+                      {accounts?.map((a) => {
+                        const meta = ACCOUNT_TYPE_META[a.type as AccountType];
+                        return (
+                          <SelectItem key={a.id} value={a.id}>
+                            {meta.emoji} {a.accountName} {a.isDefault ? "(default)" : ""}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 )}

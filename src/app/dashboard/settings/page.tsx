@@ -15,87 +15,10 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
 import { useTheme } from "@/components/theme-provider";
-import { useAccounts, useCreateAccount, useDeleteAccount, useGoals, useCreateGoal, useUpdateGoal, useDeleteGoal, useBills, useCreateBill, useUpdateBill, useDeleteBill } from "@/hooks/use-app-data";
+import { useGoals, useCreateGoal, useUpdateGoal, useDeleteGoal, useBills, useCreateBill, useUpdateBill, useDeleteBill } from "@/hooks/use-app-data";
 import { useUserCurrency } from "@/hooks/use-user-currency";
 import { formatMoney } from "@/lib/utils";
-import type { AccountDTO, BillDTO } from "@/lib/api-client";
-
-function AccountsSection() {
-  const { data: accounts } = useAccounts();
-  const createAccount = useCreateAccount();
-  const deleteAccount = useDeleteAccount();
-  const [open, setOpen] = React.useState(false);
-  const [name, setName] = React.useState("");
-  const [type, setType] = React.useState<AccountDTO["type"]>("bank");
-
-  return (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between">
-        <div>
-          <CardTitle className="text-base font-medium text-foreground">Accounts</CardTitle>
-          <CardDescription>Cash, bank, and credit card accounts</CardDescription>
-        </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" variant="outline"><Icons.Plus className="size-3.5" /> Add account</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-sm">
-            <DialogHeader><DialogTitle>New account</DialogTitle></DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label>Name</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Chase Checking" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Type</Label>
-                <Select value={type} onValueChange={(v) => setType(v as AccountDTO["type"])}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="bank">Bank</SelectItem>
-                    <SelectItem value="credit_card">Credit card</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                disabled={!name.trim()}
-                onClick={async () => {
-                  await createAccount.mutateAsync({ name, type });
-                  setName("");
-                  setOpen(false);
-                }}
-              >
-                Add
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </CardHeader>
-      <CardContent>
-        {accounts && accounts.length > 0 ? (
-          <ul className="space-y-2">
-            {accounts.map((a) => (
-              <li key={a.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm">
-                <span className="flex items-center gap-2">
-                  <Icons.Wallet className="size-4 text-muted-foreground" />
-                  {a.name} <Badge variant="secondary">{a.type.replace("_", " ")}</Badge>
-                </span>
-                <Button variant="ghost" size="icon" className="size-7" onClick={() => deleteAccount.mutate(a.id)}>
-                  <Icons.Trash2 className="size-3.5" />
-                </Button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="py-6 text-center text-sm text-muted-foreground">No accounts added yet</p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+import type { BillDTO } from "@/lib/api-client";
 
 function GoalsSection() {
   const currency = useUserCurrency();
@@ -297,7 +220,22 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <AccountsSection />
+      <Card>
+        <CardContent className="flex items-center justify-between pt-5">
+          <div className="flex items-center gap-3">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-primary-soft text-primary">
+              <Icons.Landmark className="size-4.5" />
+            </span>
+            <div>
+              <p className="text-sm font-medium">Connected accounts</p>
+              <p className="text-xs text-muted-foreground">Bank, PayPal, and M-Pesa accounts now live on your Profile page</p>
+            </div>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <a href="/dashboard/profile#connected-accounts">Manage</a>
+          </Button>
+        </CardContent>
+      </Card>
       <GoalsSection />
       <BillsSection />
     </div>

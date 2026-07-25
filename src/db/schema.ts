@@ -52,11 +52,21 @@ export const financeAccounts = sqliteTable("finance_accounts", {
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  type: text("type", { enum: ["cash", "bank", "credit_card", "other"] })
+  type: text("type", { enum: ["bank", "paypal", "mpesa"] }).notNull(),
+  provider: text("provider").notNull(),
+  accountName: text("account_name").notNull(),
+  accountNumber: text("account_number"),
+  currency: text("currency").notNull().default("USD"),
+  status: text("status", { enum: ["connected", "disconnected"] })
     .notNull()
-    .default("bank"),
+    .default("connected"),
+  isDefault: integer("is_default", { mode: "boolean" }).notNull().default(false),
+  isTrackingEnabled: integer("is_tracking_enabled", { mode: "boolean" }).notNull().default(true),
+  lastSynced: text("last_synced"),
   createdAt: text("created_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
+  updatedAt: text("updated_at")
     .notNull()
     .default(sql`(current_timestamp)`),
 });

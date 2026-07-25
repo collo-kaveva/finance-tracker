@@ -8,7 +8,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import type { TransactionFilters } from "@/hooks/use-transactions";
-import type { CategoryDTO } from "@/lib/api-client";
+import type { CategoryDTO, AccountDTO } from "@/lib/api-client";
+import { ACCOUNT_TYPE_META } from "@/lib/account-meta";
 
 const PAYMENT_METHODS = [
   { value: "cash", label: "Cash" },
@@ -22,10 +23,12 @@ export function TransactionFiltersBar({
   filters,
   onChange,
   categories,
+  accounts,
 }: {
   filters: TransactionFilters;
   onChange: (next: TransactionFilters) => void;
   categories: CategoryDTO[];
+  accounts: AccountDTO[];
 }) {
   const activeAdvanced =
     !!filters.dateFrom || !!filters.dateTo || !!filters.amountMin || !!filters.amountMax || !!filters.paymentMethod;
@@ -61,6 +64,16 @@ export function TransactionFiltersBar({
           <SelectItem value="all">All categories</SelectItem>
           {categories.map((c) => (
             <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select value={filters.accountId || "all"} onValueChange={(v) => set({ accountId: v === "all" ? "" : v })}>
+        <SelectTrigger className="w-40"><SelectValue placeholder="Account" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All accounts</SelectItem>
+          {accounts.map((a) => (
+            <SelectItem key={a.id} value={a.id}>{ACCOUNT_TYPE_META[a.type].emoji} {a.accountName}</SelectItem>
           ))}
         </SelectContent>
       </Select>

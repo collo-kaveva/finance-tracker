@@ -21,13 +21,15 @@ export async function GET(req: Request) {
   const filtered = all.filter((t) => (!dateFrom || t.date >= dateFrom) && (!dateTo || t.date <= dateTo));
   filtered.sort((a, b) => (a.date < b.date ? -1 : 1));
 
-  const header = ["Date", "Title", "Category", "Type", "Payment Method", "Amount"];
+  const header = ["Date", "Title", "Category", "Type", "Payment Method", "Connected Account", "Amount"];
+  const ACCOUNT_LABELS: Record<string, string> = { bank: "Bank", paypal: "PayPal", mpesa: "M-Pesa" };
   const rows = filtered.map((t) => [
     t.date,
     t.title,
     t.categoryName ?? "",
     t.type,
     t.paymentMethod,
+    t.accountType ? ACCOUNT_LABELS[t.accountType] ?? t.accountType : "",
     t.amount.toFixed(2),
   ]);
 

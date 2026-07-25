@@ -39,6 +39,8 @@ export interface TransactionDTO {
   isRecurring: boolean;
   recurrenceInterval: "weekly" | "monthly" | "yearly" | null;
   accountId: string | null;
+  accountType: "bank" | "paypal" | "mpesa" | null;
+  accountName: string | null;
   categoryId: string;
   categoryName: string | null;
   categoryColor: string | null;
@@ -62,8 +64,19 @@ export interface BudgetDTO {
 
 export interface AccountDTO {
   id: string;
-  name: string;
-  type: "cash" | "bank" | "credit_card" | "other";
+  type: "bank" | "paypal" | "mpesa";
+  provider: string;
+  accountName: string;
+  accountNumber: string | null;
+  currency: string;
+  status: "connected" | "disconnected";
+  isDefault: boolean;
+  isTrackingEnabled: boolean;
+  lastSynced: string | null;
+  totalTransactions: number;
+  totalSpending: number;
+  totalIncome: number;
+  balance: number;
 }
 
 export interface GoalDTO {
@@ -117,5 +130,7 @@ export interface ReportsResponseDTO {
   monthlyTrend: { label: string; income: number; expense: number; year: number; month: number }[];
   budgetUtilization: { name: string; budget: number; spent: number; percentUsed: number }[];
   yearlySummary: { year: number; totalIncome: number; totalExpense: number; transactionCount: number };
+  paymentMethodBreakdown: { accountType: string; label: string; spending: number; income: number; transactionCount: number }[];
+  weeklyComparison: { thisWeek: number; lastWeek: number; changePercent: number | null };
   transactionCount: number;
 }

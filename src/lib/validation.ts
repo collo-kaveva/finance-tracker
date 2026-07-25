@@ -74,10 +74,18 @@ export const budgetSchema = z.object({
 });
 export type BudgetInput = z.infer<typeof budgetSchema>;
 
+export const accountTypeEnum = z.enum(["bank", "paypal", "mpesa"]);
+
 export const accountSchema = z.object({
-  name: z.string().min(1).max(60),
-  type: z.enum(["cash", "bank", "credit_card", "other"]),
+  type: accountTypeEnum,
+  provider: z.string().min(1, "Provider is required").max(60),
+  accountName: z.string().min(1, "Account name is required").max(60),
+  accountNumber: z.string().max(40).optional().nullable(),
+  currency: z.enum(currencies),
+  isDefault: z.boolean(),
+  isTrackingEnabled: z.boolean(),
 });
+export type AccountInput = z.infer<typeof accountSchema>;
 
 export const goalSchema = z.object({
   name: z.string().min(1).max(80),

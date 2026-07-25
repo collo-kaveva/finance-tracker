@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { and, asc, desc, eq, gte, lte, like, or, SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { transactions, categories } from "@/db/schema";
+import { transactions, categories, financeAccounts } from "@/db/schema";
 import { requireUserId } from "@/lib/session";
 import { transactionSchema } from "@/lib/validation";
-import { checkAndCreateBudgetNotifications, maybeCreateLargeExpenseNotification } from "@/lib/notifications";
+import { checkAndCreateBudgetNotifications, maybeCreateLargeExpenseNotification, checkPaymentMethodConcentration, checkUnusualSpending } from "@/lib/notifications";
 
 export async function GET(req: Request) {
   const auth = await requireUserId();
@@ -14,6 +14,7 @@ export async function GET(req: Request) {
   const q = url.searchParams.get("q")?.trim();
   const type = url.searchParams.get("type");
   const categoryId = url.searchParams.get("categoryId");
+  const accountId = url.searchParams.get("accountId");
   const paymentMethod = url.searchParams.get("paymentMethod");
   const dateFrom = url.searchParams.get("dateFrom");
   const dateTo = url.searchParams.get("dateTo");
@@ -27,6 +28,7 @@ export async function GET(req: Request) {
   const conditions: SQL[] = [eq(transactions.userId, auth.userId)];
   if (type === "income" || type === "expense") conditions.push(eq(transactions.type, type));
   if (categoryId) conditions.push(eq(transactions.categoryId, categoryId));
+  if (accountId) conditions.push(eq(transactions.accountId, accountId));
   if (paymentMethod) {
     conditions.push(
       eq(
@@ -65,6 +67,8 @@ export async function GET(req: Request) {
       isRecurring: transactions.isRecurring,
       recurrenceInterval: transactions.recurrenceInterval,
       accountId: transactions.accountId,
+      accountType: financeAccounts.type,
+      accountName: financeAccounts.accountName,
       categoryId: transactions.categoryId,
       categoryName: categories.name,
       categoryColor: categories.color,
@@ -72,6 +76,7 @@ export async function GET(req: Request) {
     })
     .from(transactions)
     .leftJoin(categories, eq(transactions.categoryId, categories.id))
+    .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id))
     .where(and(...conditions))
     .orderBy(orderFn(sortColumn));
 
@@ -100,6 +105,8 @@ export async function POST(req: Request) {
   if (parsed.data.type === "expense") {
     await checkAndCreateBudgetNotifications(auth.userId, parsed.data.date);
     await maybeCreateLargeExpenseNotification(auth.userId, row);
+    await checkUnusualSpending(auth.userId, parsed.data.date);
+    await checkPaymentMethodConcentration(auth.userId);
   }
 
   return NextResponse.json(row, { status: 201 });

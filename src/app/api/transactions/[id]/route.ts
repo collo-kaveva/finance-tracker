@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { transactions } from "@/db/schema";
 import { requireUserId } from "@/lib/session";
 import { transactionSchema } from "@/lib/validation";
-import { checkAndCreateBudgetNotifications } from "@/lib/notifications";
+import { checkAndCreateBudgetNotifications, checkUnusualSpending, checkPaymentMethodConcentration } from "@/lib/notifications";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireUserId();
@@ -42,6 +42,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   if (row.type === "expense") {
     await checkAndCreateBudgetNotifications(auth.userId, row.date);
+    await checkUnusualSpending(auth.userId, row.date);
+    await checkPaymentMethodConcentration(auth.userId);
   }
 
   return NextResponse.json(row);

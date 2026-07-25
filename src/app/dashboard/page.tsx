@@ -2,7 +2,7 @@
 import * as React from "react";
 import Link from "next/link";
 import {
-  Wallet, TrendingUp, TrendingDown, PiggyBank, Target, Flame, CalendarClock,
+  Wallet, TrendingUp, TrendingDown, PiggyBank, Target, Flame, CalendarClock, Landmark, Layers,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,12 +12,16 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { MonthPicker } from "@/components/dashboard/month-picker";
 import { RecentTransactionsList } from "@/components/dashboard/recent-transactions";
 import { BudgetProgressList } from "@/components/dashboard/budget-progress-list";
+import { SpendingInsightsPanel } from "@/components/dashboard/spending-insights";
+import { SpendingWarningsPanel } from "@/components/dashboard/spending-warnings";
 import { CategoryPieChart } from "@/components/charts/category-pie-chart";
 import { IncomeExpenseChart } from "@/components/charts/income-expense-chart";
-import { useDashboard, useReports } from "@/hooks/use-app-data";
+import { useDashboard, useReports, usePaymentAnalytics } from "@/hooks/use-app-data";
 import { useBudgets } from "@/hooks/use-budgets";
+import { useAccounts } from "@/hooks/use-accounts";
 import { useUserCurrency } from "@/hooks/use-user-currency";
 import { formatMoney } from "@/lib/utils";
+import { ACCOUNT_TYPE_META, type AccountType } from "@/lib/account-meta";
 
 export default function DashboardOverviewPage() {
   const now = new Date();
@@ -28,6 +32,13 @@ export default function DashboardOverviewPage() {
   const { data: summary, isLoading } = useDashboard(month, year);
   const { data: budgets, isLoading: budgetsLoading } = useBudgets(month, year);
   const { data: reports } = useReports({ year, month: null });
+  const { data: accounts, isLoading: accountsLoading } = useAccounts();
+  const { data: paymentAnalytics } = usePaymentAnalytics({});
+
+  const connectedCount = accounts?.filter((a) => a.status === "connected").length ?? 0;
+  const totalBalance = accounts?.reduce((s, a) => s + a.balance, 0) ?? 0;
+  const mostUsedMethod = paymentAnalytics ? [...paymentAnalytics.distribution].sort((a, b) => b.count - a.count)[0] : null;
+  const largestSource = paymentAnalytics?.topMethod ?? null;
 
   return (
     <div className="space-y-6">
@@ -92,6 +103,42 @@ export default function DashboardOverviewPage() {
         </div>
       )}
 
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {accountsLoading ? (
+          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28" />)
+        ) : (
+          <>
+            <StatCard
+              label="Connected accounts"
+              value={String(connectedCount)}
+              icon={Landmark}
+              tone="primary"
+              hint={connectedCount > 0 ? `${connectedCount} account${connectedCount > 1 ? "s" : ""} synced` : "None connected yet"}
+            />
+            <StatCard
+              label="Total balance"
+              value={formatMoney(totalBalance, currency)}
+              icon={Wallet}
+              tone={totalBalance >= 0 ? "primary" : "danger"}
+              hint="Across all connected accounts"
+            />
+            <StatCard
+              label="Most used payment method"
+              value={mostUsedMethod ? mostUsedMethod.label : "—"}
+              icon={Layers}
+              hint={mostUsedMethod ? `${mostUsedMethod.count} transactions` : "No data yet"}
+            />
+            <StatCard
+              label="Largest expense source"
+              value={largestSource ? largestSource.label : "—"}
+              icon={Flame}
+              tone="accent"
+              hint={largestSource ? `${Math.round(largestSource.percent)}% of expenses` : "No data yet"}
+            />
+          </>
+        )}
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-5">
         <Card className="lg:col-span-3">
           <CardHeader className="flex-row items-center justify-between">
@@ -151,6 +198,10 @@ export default function DashboardOverviewPage() {
             )}
           </CardContent>
         </Card>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <SpendingInsightsPanel />
+        <SpendingWarningsPanel />
       </div>
     </div>
   );

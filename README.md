@@ -103,6 +103,40 @@ src/
   fully testable out of the box. Wire up Resend/SendGrid/etc. in
   `src/app/api/auth/forgot-password/route.ts` for production use.
 
+### Financial Accounts & Spending Insights
+
+- **Connected accounts** (Profile page → Connected Accounts): simulate linking
+  Bank, PayPal, and M-Pesa accounts — connect, edit, disconnect/reconnect, sync,
+  set a default, and toggle tracking per account. Since real banking APIs are
+  out of scope, `POST /api/accounts` synthesizes realistic account numbers and
+  sync timestamps the same shape a real OAuth/Plaid-style callback would
+  return, so swapping in a real provider later is a matter of replacing that
+  one function.
+- **Spending analysis engine** (`src/lib/spending-analytics.ts`): pure,
+  unit-testable aggregation functions (by day/week/month/payment
+  method/category) plus `generateInsights()`, which produces the same style
+  of insight text as the spec ("You've spent 82% of your Food budget," "Your
+  M-Pesa spending increased by 35% compared to last month," "Most of your
+  expenses come from Bank transactions"). Surfaced via `/api/insights` and the
+  Spending Insights panel on the Dashboard.
+- **Spending warnings**: budget-exceeded/nearing (existing), plus new
+  unusual-spending detection (today vs. a 30-day rolling average) and
+  payment-method concentration warnings ("75% of your expenses are coming
+  from M-Pesa"), generated in `src/lib/notifications.ts` and shown on the
+  Dashboard, Profile, and the notifications dropdown.
+- **Transactions page**: toggle between a flat, sortable/paginated **List**
+  view and a **Grouped** view that buckets transactions by connected account
+  (Bank / PayPal / M-Pesa), each with income/expense/average/largest stats
+  and collapse-to-expand. Below that, a Payment Method Analytics section adds
+  a distribution pie chart, spending bar chart, monthly trend line chart (one
+  line per method), transaction-count horizontal bar chart, and a top-method
+  summary card — all driven by the same filter bar (including a new
+  Connected Account filter) as the transaction list.
+- **Reports**: extended with spending/income by payment method and a
+  week-over-week comparison; CSV export now includes the connected account
+  column.
+
+
 ## What's intentionally out of scope
 
 A few "nice-to-have" items from the brief are not implemented, to keep the

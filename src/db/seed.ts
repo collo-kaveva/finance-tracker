@@ -107,11 +107,39 @@ async function main() {
   const accountRows = await db
     .insert(financeAccounts)
     .values([
-      { userId: user.id, name: "Everyday Checking", type: "bank" as const },
-      { userId: user.id, name: "Cash Wallet", type: "cash" as const },
-      { userId: user.id, name: "Rewards Credit Card", type: "credit_card" as const },
+      {
+        userId: user.id, type: "bank" as const, provider: "Equity Bank", accountName: "Everyday Checking",
+        accountNumber: "•••• •••• 4821", currency: "USD", status: "connected" as const,
+        isDefault: true, isTrackingEnabled: true, lastSynced: new Date().toISOString(),
+      },
+      {
+        userId: user.id, type: "bank" as const, provider: "KCB Bank", accountName: "Savings Account",
+        accountNumber: "•••• •••• 1190", currency: "USD", status: "connected" as const,
+        isDefault: false, isTrackingEnabled: true, lastSynced: new Date().toISOString(),
+      },
+      {
+        userId: user.id, type: "paypal" as const, provider: "PayPal", accountName: "PayPal Wallet",
+        accountNumber: "amara.ok@email.com", currency: "USD", status: "connected" as const,
+        isDefault: false, isTrackingEnabled: true, lastSynced: new Date().toISOString(),
+      },
+      {
+        userId: user.id, type: "mpesa" as const, provider: "Safaricom M-Pesa", accountName: "M-Pesa",
+        accountNumber: "•••• 234", currency: "USD", status: "connected" as const,
+        isDefault: false, isTrackingEnabled: true, lastSynced: new Date().toISOString(),
+      },
     ])
     .returning();
+
+  const [checkingAcct, savingsAcct, paypalAcct, mpesaAcct] = accountRows;
+
+  // Weighted account picker for everyday spending: bank is used most often,
+  // M-Pesa moderately, PayPal for subscriptions/online purchases.
+  function pickAccountForCategory(catName: string) {
+    if (catName === "Bills" || catName === "Healthcare") return pick([checkingAcct, checkingAcct, savingsAcct]);
+    if (catName === "Entertainment" || catName === "Shopping") return pick([paypalAcct, paypalAcct, checkingAcct, mpesaAcct]);
+    if (catName === "Food" || catName === "Transport") return pick([mpesaAcct, mpesaAcct, mpesaAcct, checkingAcct]);
+    return pick([checkingAcct, mpesaAcct, paypalAcct, savingsAcct]);
+  }
 
   const paymentMethods = ["cash", "card", "bank_transfer", "upi", "other"] as const;
 
@@ -134,7 +162,7 @@ async function main() {
       amount: Math.round(randomBetween(2800, 3600) * 100) / 100,
       type: "income",
       categoryId: salaryCat.id,
-      accountId: accountRows[0].id,
+      accountId: checkingAcct.id,
       paymentMethod: "bank_transfer",
       notes: null,
       date: dateStr(new Date(monthDate.getFullYear(), monthDate.getMonth(), salaryDay)),
@@ -153,7 +181,7 @@ async function main() {
         amount: Math.round(randomBetween(opt.range[0], opt.range[1]) * 100) / 100,
         type: "income",
         categoryId: incomeCat.id,
-        accountId: accountRows[0].id,
+        accountId: checkingAcct.id,
         paymentMethod: "bank_transfer",
         notes: null,
         date: dateStr(new Date(monthDate.getFullYear(), monthDate.getMonth(), Math.min(Math.ceil(randomBetween(2, cappedDays)), cappedDays))),
@@ -170,7 +198,7 @@ async function main() {
       amount: Math.round(randomBetween(900, 1400) * 100) / 100,
       type: "expense",
       categoryId: rentCat.id,
-      accountId: accountRows[0].id,
+      accountId: checkingAcct.id,
       paymentMethod: "bank_transfer",
       notes: null,
       date: dateStr(new Date(monthDate.getFullYear(), monthDate.getMonth(), Math.min(3, cappedDays))),
@@ -188,7 +216,7 @@ async function main() {
         amount: Math.round(randomBetween(opt.range[0], opt.range[1]) * 100) / 100,
         type: "expense",
         categoryId: billsCat.id,
-        accountId: accountRows[0].id,
+        accountId: checkingAcct.id,
         paymentMethod: "card",
         notes: null,
         date: dateStr(new Date(monthDate.getFullYear(), monthDate.getMonth(), Math.min(Math.ceil(randomBetween(5, 20)), cappedDays))),
@@ -212,7 +240,7 @@ async function main() {
         amount: Math.round(randomBetween(opt.range[0], opt.range[1]) * 100) / 100,
         type: "expense",
         categoryId: cat.id,
-        accountId: pick(accountRows).id,
+        accountId: pickAccountForCategory(catName).id,
         paymentMethod: pick(paymentMethods),
         notes: Math.random() > 0.8 ? "Logged from mobile" : null,
         date: dateStr(new Date(monthDate.getFullYear(), monthDate.getMonth(), day)),
@@ -287,9 +315,17 @@ async function main() {
   console.log(`Inserted ${txnValues.length} transactions.`);
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+// Export seed function for programmatic use
+export async function seed() {
+  await main();
+}
+
+// Run directly if executed via CLI
+if (require.main === module) {
+  main()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
+}

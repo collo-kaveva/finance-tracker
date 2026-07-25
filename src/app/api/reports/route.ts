@@ -79,6 +79,45 @@ export async function GET(req: Request) {
     transactionCount: yearTxns.length,
   };
 
+  // Spending & income by payment method (connected account type)
+  const ACCOUNT_LABELS: Record<string, string> = { bank: "Bank", paypal: "PayPal", mpesa: "M-Pesa" };
+  const methodTypes = ["bank", "paypal", "mpesa"] as const;
+  const paymentMethodBreakdown = methodTypes
+    .map((type) => {
+      const forType = inRange.filter((t) => t.accountType === type);
+      return {
+        accountType: type,
+        label: ACCOUNT_LABELS[type],
+        spending: forType.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0),
+        income: forType.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0),
+        transactionCount: forType.length,
+      };
+    })
+    .filter((m) => m.transactionCount > 0);
+
+  // This week vs. last week comparison
+  const now2 = new Date();
+  const startOfWeek = new Date(now2);
+  startOfWeek.setDate(now2.getDate() - now2.getDay());
+  const startOfLastWeek = new Date(startOfWeek);
+  startOfLastWeek.setDate(startOfWeek.getDate() - 7);
+  const endOfLastWeek = new Date(startOfWeek);
+  endOfLastWeek.setDate(startOfWeek.getDate() - 1);
+
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  const thisWeekExpense = all
+    .filter((t) => t.type === "expense" && t.date >= iso(startOfWeek) && t.date <= iso(now2))
+    .reduce((s, t) => s + t.amount, 0);
+  const lastWeekExpense = all
+    .filter((t) => t.type === "expense" && t.date >= iso(startOfLastWeek) && t.date <= iso(endOfLastWeek))
+    .reduce((s, t) => s + t.amount, 0);
+
+  const weeklyComparison = {
+    thisWeek: thisWeekExpense,
+    lastWeek: lastWeekExpense,
+    changePercent: lastWeekExpense > 0 ? ((thisWeekExpense - lastWeekExpense) / lastWeekExpense) * 100 : null,
+  };
+
   return NextResponse.json({
     range: { from: rangeFrom, to: rangeTo },
     totalIncome,
@@ -90,6 +129,8 @@ export async function GET(req: Request) {
     monthlyTrend,
     budgetUtilization,
     yearlySummary,
+    paymentMethodBreakdown,
+    weeklyComparison,
     transactionCount: inRange.length,
   });
 }

@@ -1,6 +1,6 @@
 import { and, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/db";
-import { transactions, categories, budgets, bills } from "@/db/schema";
+import { transactions, categories, budgets, bills, financeAccounts } from "@/db/schema";
 
 export function monthRange(year: number, month: number) {
   const from = `${year}-${String(month).padStart(2, "0")}-01`;
@@ -21,9 +21,12 @@ export async function getAllTransactionsWithCategory(userId: string) {
       categoryName: categories.name,
       categoryColor: categories.color,
       paymentMethod: transactions.paymentMethod,
+      accountId: transactions.accountId,
+      accountType: financeAccounts.type,
     })
     .from(transactions)
     .leftJoin(categories, eq(transactions.categoryId, categories.id))
+    .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id))
     .where(eq(transactions.userId, userId));
 }
 

@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select";
 import { profileSchema, changePasswordSchema, currencies } from "@/lib/validation";
 import { z } from "zod";
+import { ConnectedAccountsSection } from "@/components/profile/connected-accounts";
+import { SpendingWarningsPanel } from "@/components/dashboard/spending-warnings";
 
 type ProfileValues = z.infer<typeof profileSchema>;
 type PasswordValues = z.infer<typeof changePasswordSchema>;
@@ -74,7 +76,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-4xl space-y-6">
       <div>
         <h1 className="font-display text-2xl font-semibold tracking-tight">Profile</h1>
         <p className="text-sm text-muted-foreground">Manage your personal details</p>
@@ -151,6 +153,9 @@ export default function ProfilePage() {
           </form>
         </CardContent>
       </Card>
+
+      <ConnectedAccountsSection />
+      <SpendingWarningsPanel limit={8} />
     </div>
   );
 }

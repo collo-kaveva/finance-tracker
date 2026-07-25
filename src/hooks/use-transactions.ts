@@ -8,6 +8,7 @@ export interface TransactionFilters {
   q?: string;
   type?: "income" | "expense" | "";
   categoryId?: string;
+  accountId?: string;
   paymentMethod?: string;
   dateFrom?: string;
   dateTo?: string;

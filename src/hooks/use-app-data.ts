@@ -1,34 +1,9 @@
 "use client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiFetch, type AccountDTO, type GoalDTO, type BillDTO, type NotificationDTO, type DashboardSummaryDTO, type ReportsResponseDTO } from "@/lib/api-client";
+import { apiFetch, type GoalDTO, type BillDTO, type NotificationDTO, type DashboardSummaryDTO, type ReportsResponseDTO } from "@/lib/api-client";
 import { toast } from "sonner";
 
-// ---- Accounts ----
-export function useAccounts() {
-  return useQuery({ queryKey: ["accounts"], queryFn: () => apiFetch<AccountDTO[]>("/api/accounts") });
-}
-export function useCreateAccount() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: { name: string; type: AccountDTO["type"] }) =>
-      apiFetch<AccountDTO>("/api/accounts", { method: "POST", body: JSON.stringify(input) }),
-    onSuccess: () => {
-      toast.success("Account added");
-      qc.invalidateQueries({ queryKey: ["accounts"] });
-    },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to add account"),
-  });
-}
-export function useDeleteAccount() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => apiFetch<{ ok: true }>(`/api/accounts/${id}`, { method: "DELETE" }),
-    onSuccess: () => {
-      toast.success("Account removed");
-      qc.invalidateQueries({ queryKey: ["accounts"] });
-    },
-  });
-}
+// Accounts now live in @/hooks/use-accounts (richer connected-accounts model)
 
 // ---- Goals ----
 export function useGoals() {
@@ -165,5 +140,43 @@ export function useReports(params: ReportsParams) {
   return useQuery({
     queryKey: ["reports", params],
     queryFn: () => apiFetch<ReportsResponseDTO>(`/api/reports?${search.toString()}`),
+  });
+}
+
+// ---- Insights & payment-method analytics ----
+export interface InsightDTO {
+  text: string;
+  tone: "info" | "warning" | "positive";
+}
+
+export function useInsights() {
+  return useQuery({
+    queryKey: ["insights"],
+    queryFn: () => apiFetch<{ insights: InsightDTO[] }>("/api/insights"),
+  });
+}
+
+export interface PaymentAnalyticsFilters {
+  accountId?: string;
+  categoryId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  amountMin?: string;
+  amountMax?: string;
+}
+
+export interface PaymentAnalyticsDTO {
+  distribution: { accountType: string; label: string; total: number; count: number; percent: number }[];
+  monthlyTrend: { label: string; bank: number; paypal: number; mpesa: number }[];
+  totalExpense: number;
+  topMethod: { accountType: string; label: string; total: number; count: number; percent: number } | null;
+}
+
+export function usePaymentAnalytics(filters: PaymentAnalyticsFilters) {
+  const search = new URLSearchParams();
+  Object.entries(filters).forEach(([k, v]) => v && search.set(k, v));
+  return useQuery({
+    queryKey: ["payment-analytics", filters],
+    queryFn: () => apiFetch<PaymentAnalyticsDTO>(`/api/payment-analytics?${search.toString()}`),
   });
 }
